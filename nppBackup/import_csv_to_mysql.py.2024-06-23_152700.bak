@@ -1,0 +1,54 @@
+import pandas as pd
+import mysql.connector
+from mysql.connector import Error
+
+# Load CSV data into a DataFrame
+csv_file_path = 'path/to/your/csvfile.csv'
+df = pd.read_csv(csv_file_path)
+
+# Define your MySQL connection parameters
+connection_config = {
+    'host': 'localhost',  # or your MySQL hostname
+    'user': 'your_mysql_username',
+    'password': 'your_mysql_password',
+    'database': 'movies_db'
+}
+
+try:
+    # Establish a connection to the database
+    connection = mysql.connector.connect(**connection_config)
+    cursor = connection.cursor()
+
+    # Create an insert query
+    insert_query = """
+    INSERT INTO movies (movie_url, title, poster, release_year, length_in_min, imdb_rating, rating_count, plot, directors, writers, stars, genres)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+
+    # Iterate through the DataFrame and insert each row into the database
+    for index, row in df.iterrows():
+        cursor.execute(insert_query, (
+            row['Movie URL'],
+            row['Title'],
+            row['Poster'],
+            row['Release Year'],
+            row['Length in Min'],
+            row['IMDB Rating'],
+            row['Rating Count'],
+            row['Plot'],
+            row['Directors'],
+            row['Writers'],
+            row['Stars'],
+            row['Genres']
+        ))
+
+    # Commit the transaction
+    connection.commit()
+
+except Error as e:
+    print(f"Error: {e}")
+finally:
+    if connection.is_connected():
+        cursor.close()
+        connection.close()
+        print("MySQL connection is closed.")
